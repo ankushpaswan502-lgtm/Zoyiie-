@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zoyiie</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    body { 
+      background: #090d16; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      height: 100vh; 
+      color: #f1f5f9;
+    }
+    
+    .app-container { 
+      width: 100%; 
+      max-width: 450px; 
+      height: 95vh; 
+      background: #0f172a; 
+      border-radius: 24px; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: hidden; 
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8); 
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      position: relative;
+    }
+    
+    .header { 
+      background: #1e293b; 
+      color: #f8fafc; 
+      padding: 16px 20px; 
+      font-size: 1.05rem; 
+      font-weight: 600; 
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+    
+    .screen { display: none; padding: 16px; flex: 1; flex-direction: column; overflow-y: auto; }
+    .screen.active { display: flex !important; }
+
+    input[type="text"], input[type="tel"] { 
+      width: 100%; 
+      padding: 14px 18px; 
+      margin: 10px 0; 
+      border: 1px solid #334155; 
+      border-radius: 14px; 
+      font-size: 14px; 
+      background: #1e293b; 
+      color: #f8fafc; 
+      outline: none; 
+    }
+    input:focus { border-color: #38bdf8; }
+    input::placeholder { color: #64748b; }
+
+    button { 
+      width: 100%; 
+      padding: 14px; 
+      background: #00e676; 
+      color: #090d16; 
+      border: none; 
+      border-radius: 14px; 
+      font-weight: 700; 
+      font-size: 14px; 
+      cursor: pointer; 
+      margin-top: 10px; 
+      transition: all 0.2s ease;
+    }
+    button:active { transform: scale(0.98); }
+
+    /* Bottom Navigation Bar */
+    .nav-bar {
+      display: flex;
+      background: #1e293b;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 10px 0;
+    }
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      color: #64748b;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .nav-item.active-nav { color: #00e676; }
+
+    /* User Cards & Status List */
+    .user-card, .status-card { 
+      background: #1e293b; 
+      padding: 14px 18px; 
+      border-radius: 16px; 
+      margin-bottom: 10px; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      border: 1px solid rgba(255, 255, 255, 0.04); 
+    }
+    .u-info { display: flex; flex-direction: column; }
+    .u-name { font-weight: 600; color: #f8fafc; font-size: 15px; }
+    .u-phone { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+    .status-ring {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid #00e676;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 12px;
+      background: #334155;
+    }
+
+    /* Chat Area */
+    #chat-box { 
+      flex: 1; 
+      overflow-y: auto; 
+      padding: 18px; 
+      background-color: #0b1120; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+    }
+    
+    .msg-card { 
+      max-width: 78%; 
+      padding: 10px 14px; 
+      border-radius: 14px; 
+      font-size: 14px; 
+      line-height: 1.45; 
+      word-wrap: break-word; 
+    }
+    .msg-card.sent { background: #005c4b; color: #f1f5f9; align-self: flex-end; }
+    .msg-card.received { background: #1e293b; color: #e2e8f0; align-self: flex-start; }
+
+    .delete-btn { 
+      background: none; border: none; color: #94a3b8; font-size: 11px; cursor: pointer; margin-top: 4px; display: block; 
+    }
+
+    .input-area { 
+      padding: 12px; background: #1e293b; display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(255, 255, 255, 0.05); 
+    }
+    .file-btn { 
+      background: #334155; padding: 8px; border-radius: 50%; color: #94a3b8; cursor: pointer; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 18px; 
+    }
+    .top-btn { background: none; color: #38bdf8; border: none; font-size: 13px; cursor: pointer; width: auto; margin:0; }
+
+    /* Call Overlay Screen */
+    #call-screen {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #090d16;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 40px 20px;
+      z-index: 100;
+    }
+    .video-preview {
+      width: 100%;
+      height: 55%;
+      background: #1e293b;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      overflow: hidden;
+    }
+    video { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- SCREEN 1: LOGIN -->
+  <div id="login-screen" class="screen active" style="justify-content: center; text-align: center;">
+    <h1 style="color:#00e676; margin-bottom: 6px; font-size: 2.2rem; font-weight: 800;">Zoyiie</h1>
+    <p style="color:#64748b; font-size: 13px; margin-bottom: 24px;">Messaging Platform</p>
+    
+    <input type="text" id="user-name" placeholder="Enter Name">
+    <input type="tel" id="user-phone" placeholder="Enter Phone Number">
+    <button type="button" onclick="loginUser()">Continue</button>
+  </div>
+
+  <!-- SCREEN 2: CHATS TAB -->
+  <div id="contacts-screen" class="screen">
+    <div class="header" style="margin: -16px -16px 16px -16px;">
+      <span>Chats</span>
+      <span id="my-profile-name" style="font-size: 13px; color: #94a3b8;"></span>
+    </div>
+
+    <!-- Start Chat Button -->
+    <div style="margin-bottom: 18px;">
+      <p style="font-size: 12px; color: #94a3b8; margin-bottom: 6px;">Start new conversation:</p>
+      <button onclick="openNewChatScreen()" style="margin:0;">Start Chat</button>
+    </div>
+
+    <h4 style="color:#64748b; margin-bottom: 12px; font-size: 13px; text-transform: uppercase;">Recent Contacts</h4>
+    <div id="recent-users-list" style="overflow-y: auto; flex:1;"></div>
+  </div>
+
+  <!-- SCREEN 3: SELECT CONTACT -->
+  <div id="select-contact-screen" class="screen">
+    <div class="header" style="margin: -16px -16px 16px -16px;">
+      <button class="top-btn" onclick="switchTab('contacts-screen')"> Back</button>
+      <span>Select Contact</span>
+      <span style="width: 30px;"></span>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+      <input type="text" id="contact-search-input" placeholder="Search name or phone number..." oninput="filterContacts()" style="margin: 0;">
+    </div>
+
+    <h4 style="color:#64748b; margin-bottom: 12px; font-size: 13px; text-transform: uppercase;">App Contacts</h4>
+    <div id="all-contacts-list" style="overflow-y: auto; flex:1;"></div>
+  </div>
+
+  <!-- SCREEN 4: STATUS TAB -->
+  <div id="status-screen" class="screen">
+    <div class="header" style="margin: -16px -16px 16px -16px;">
+      <span>Status</span>
+    </div>
+
+    <div class="status-card" onclick="document.getElementById('status-file').click()">
+      <div style="display:flex; align-items:center;">
+        <div class="status-ring">+</div>
+        <div>
+          <div style="font-weight:600;">My Status</div>
+          <div style="font-size:12px; color:#64748b;">Tap to add status update</div>
+        </div>
+      </div>
+      <input type="file" id="status-file" accept="image/*" style="display:none;" onchange="uploadStatus(event)">
+    </div>
+
+    <h4 style="color:#64748b; margin: 12px 0; font-size: 13px; text-transform: uppercase;">Recent Updates (24h)</h4>
+    <div id="status-list" style="overflow-y: auto; flex:1;"></div>
+  </div>
+
+  <!-- SCREEN 5: CALLS TAB -->
+  <div id="calls-screen" class="screen">
+    <div class="header" style="margin: -16px -16px 16px -16px;">
+      <span>Call Logs</span>
+    </div>
+
+    <div style="text-align: center; color: #64748b; margin-top: 50px;">
+      <p>No recent call logs.</p>
+      <p style="font-size: 12px; margin-top: 8px;">Open a chat to start a Voice or Video call.</p>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: PRIVATE CHAT ROOM -->
+  <div id="chat-screen" class="screen" style="padding:0;">
+    <div class="header">
+      <button class="top-btn" onclick="switchTab('contacts-screen')"> Back</button>
+      <span id="chat-with-title" style="color:#f8fafc;">Chat</span>
+      <div style="display:flex; gap:12px;">
+        <button class="top-btn" onclick="startCall('voice')" style="font-size:16px;">📞</button>
+        <button class="top-btn" onclick="startCall('video')" style="font-size:16px;">📹</button>
+        <button class="top-btn" onclick="clearFullChat()" style="color:#ef4444;">Clear</button>
+      </div>
+    </div>
+
+    <div id="chat-box"></div>
+
+    <div class="input-area">
+      <label for="media-file" class="file-btn">📎</label>
+      <input type="file" id="media-file" accept="image/*,video/*" style="display:none;" onchange="uploadToCloudinary(event)">
+      <input type="text" id="message-input" placeholder="Type a message..." style="margin:0;">
+      <button onclick="sendTextMessage()" style="width:auto; padding:12px 20px; margin:0;">Send</button>
+    </div>
+  </div>
+
+  <!-- ACTIVE CALL SCREEN OVERLAY -->
+  <div id="call-screen">
+    <h3 id="call-user-name" style="font-size:1.4rem;">Calling...</h3>
+    <p id="call-type-label" style="color:#94a3b8; font-size:13px;">Zoyiie HD Call</p>
+
+    <div id="recording-badge" style="display:none; color:#ef4444; font-weight:bold; font-size:13px; margin:8px 0;">
+      🔴 Recording in progress...
+    </div>
+
+    <div class="video-preview">
+      <video id="local-video" autoplay playsinline muted></video>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:15px;">
+      <button id="rec-btn" onclick="toggleCallRecording()" style="background:#334155; color:#fff; padding:12px 20px; border-radius:30px; width:auto; margin:0;">
+        ⏺️ Record Call
+      </button>
+      
+      <button onclick="endCall()" style="background:#ef4444; color:#fff; padding:12px 24px; border-radius:30px; width:auto; margin:0;">
+        End Call
+      </button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <div id="main-nav" class="nav-bar" style="display:none;">
+    <div class="nav-item active-nav" onclick="switchTab('contacts-screen', this)">Chats</div>
+    <div class="nav-item" onclick="switchTab('status-screen', this)">Status</div>
+    <div class="nav-item" onclick="switchTab('calls-screen', this)">Calls</div>
+  </div>
+
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyATlUhTYmH8_CUYuSGk5pncjSG6KfExU5M",
+    authDomain: "zoya-52da9.firebaseapp.com",
+    projectId: "zoya-52da9",
+    storageBucket: "zoya-52da9.firebasestorage.app",
+    messagingSenderId: "418386323111",
+    appId: "1:418386323111:web:b28274468940415f9bdd82"
+  };
+
+  let db = null;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch(e) {
+    console.log("Firebase Init Error:", e);
+  }
+
+  let currentUser = { name: "", phone: "" };
+  let activeRoomId = "";
+  let localStream = null;
+  let allAppUsers = [];
+
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let isRecording = false;
+
+  /* GUARANTEED INSTANT LOGIN FUNCTION */
+  function loginUser() {
+    const nameEl = document.getElementById("user-name");
+    const phoneEl = document.getElementById("user-phone");
+
+    const name = nameEl ? nameEl.value.trim() : "";
+    const phone = phoneEl ? phoneEl.value.trim() : "";
+
+    if (!name || !phone) {
+      alert("Please enter Name and Phone Number.");
+      return;
+    }
+
+    currentUser = { name, phone };
+
+    // 1. Forcefully Switch View Immediately
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("contacts-screen").classList.add("active");
+    document.getElementById("main-nav").style.display = "flex";
+    document.getElementById("my-profile-name").innerText = name;
+
+    // 2. Async Firebase Save (in background)
+    if (db) {
+      db.collection("users").doc(phone).set({
+        name: name,
+        phone: phone,
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).then(() => {
+        loadRecentContacts();
+      }).catch((err) => {
+        console.log("Database Sync Error:", err);
+      });
+    }
+  }
+
+  function switchTab(screenId, navEl) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) targetScreen.classList.add("active");
+
+    if (navEl) {
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active-nav"));
+      navEl.classList.add("active-nav");
+    }
+
+    if (screenId === "contacts-screen") loadRecentContacts();
+    if (screenId === "status-screen") loadStatuses();
+  }
+
+  function loadRecentContacts() {
+    if (!db) return;
+    document.getElementById("my-profile-name").innerText = currentUser.name;
+
+    db.collection("users").onSnapshot((snapshot) => {
+      allAppUsers = [];
+      const recentList = document.getElementById("recent-users-list");
+      if (!recentList) return;
+      recentList.innerHTML = "";
+
+      snapshot.forEach((doc) => {
+        const user = doc.data();
+        if (user.phone !== currentUser.phone) {
+          allAppUsers.push(user);
+          recentList.innerHTML += `
+            <div class="user-card" onclick="openPrivateChat('${user.name}', '${user.phone}')">
+              <div class="u-info">
+                <span class="u-name">${user.name}</span>
+              </div>
+              <span style="color:#00e676; font-size:13px; font-weight:600;">Chat</span>
+            </div>
+          `;
+        }
+      });
+    }, (error) => {
+      console.log("Firestore Error:", error);
+    });
+  }
+
+  function openNewChatScreen() {
+    switchTab("select-contact-screen");
+    document.getElementById("contact-search-input").value = "";
+    renderContactsList(allAppUsers);
+  }
+
+  function renderContactsList(usersArray) {
+    const contactsListContainer = document.getElementById("all-contacts-list");
+    if (!contactsListContainer) return;
+    contactsListContainer.innerHTML = "";
+
+    if (usersArray.length === 0) {
+      contactsListContainer.innerHTML = `<p style="color:#64748b; font-size:13px; text-align:center; margin-top:20px;">No contacts found.</p>`;
+      return;
+    }
+
+    usersArray.forEach((user) => {
+      contactsListContainer.innerHTML += `
+        <div class="user-card" onclick="openPrivateChat('${user.name}', '${user.phone}')">
+          <div class="u-info">
+            <span class="u-name">${user.name}</span>
+            <span class="u-phone">${user.phone}</span>
+          </div>
+          <span style="color:#00e676; font-size:13px; font-weight:600;">Chat</span>
+        </div>
+      `;
+    });
+  }
+
+  function filterContacts() {
+    const query = document.getElementById("contact-search-input").value.toLowerCase().trim();
+    const filtered = allAppUsers.filter(u => 
+      u.name.toLowerCase().includes(query) || u.phone.includes(query)
+    );
+    renderContactsList(filtered);
+  }
+
+  function openPrivateChat(partnerName, partnerPhone) {
+    const sortedNumbers = [currentUser.phone, partnerPhone].sort();
+    activeRoomId = `room_${sortedNumbers[0]}_${sortedNumbers[1]}`;
+
+    document.getElementById("chat-with-title").innerText = partnerName;
+    switchTab("chat-screen");
+
+    loadPrivateMessages();
+  }
+
+  function loadPrivateMessages() {
+    if (!db || !activeRoomId) return;
+    db.collection("rooms").doc(activeRoomId).collection("messages")
+      .orderBy("timestamp", "asc")
+      .onSnapshot((snapshot) => {
+        const chatBox = document.getElementById("chat-box");
+        if (!chatBox) return;
+        chatBox.innerHTML = "";
+        snapshot.forEach((doc) => {
+          const msg = doc.data();
+          const isMe = msg.senderPhone === currentUser.phone;
+
+          chatBox.innerHTML += `
+            <div class="msg-card ${isMe ? 'sent' : 'received'}">
+              ${msg.text ? `<div>${msg.text}</div>` : ''}
+              ${msg.mediaUrl ? `<img src="${msg.mediaUrl}" style="max-width:100%; border-radius:8px; margin-top:5px;"/>` : ''}
+              <button class="delete-btn" onclick="deleteSingleMessage('${doc.id}')">Delete</button>
+            </div>
+          `;
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+  }
+
+  function sendTextMessage() {
+    const text = document.getElementById("message-input").value.trim();
+    if (!text || !activeRoomId || !db) return;
+
+    db.collection("rooms").doc(activeRoomId).collection("messages").add({
+      senderName: currentUser.name,
+      senderPhone: currentUser.phone,
+      text: text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById("message-input").value = "";
+  }
+
+  function deleteSingleMessage(messageId) {
+    if (!db || !activeRoomId) return;
+    db.collection("rooms").doc(activeRoomId).collection("messages").doc(messageId).delete();
+  }
+
+  function clearFullChat() {
+    if (!db || !activeRoomId) return;
+    if (confirm("Clear all messages?")) {
+      db.collection("rooms").doc(activeRoomId).collection("messages").get().then((s) => s.forEach(d => d.ref.delete()));
+    }
+  }
+
+  function uploadStatus(event) {
+    const file = event.target.files[0];
+    if (!file || !db) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "docs_upload_example_us_preset");
+
+    fetch(`https://api.cloudinary.com/v1_1/demo/image/upload`, { method: "POST", body: formData })
+      .then(r => r.json())
+      .then(data => {
+        if (data.secure_url) {
+          db.collection("statuses").add({
+            userName: currentUser.name,
+            userPhone: currentUser.phone,
+            imageUrl: data.secure_url,
+            createdAt: Date.now()
+          });
+          alert("Status updated!");
+        }
+      });
+  }
+
+  function loadStatuses() {
+    if (!db) return;
+    const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+
+    db.collection("statuses").where("createdAt", ">", twentyFourHoursAgo).onSnapshot((snapshot) => {
+      const statusList = document.getElementById("status-list");
+      if (!statusList) return;
+      statusList.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const st = doc.data();
+        statusList.innerHTML += `
+          <div class="status-card" onclick="window.open('${st.imageUrl}', '_blank')">
+            <div style="display:flex; align-items:center;">
+              <div class="status-ring">${st.userName[0]}</div>
+              <div>
+                <div style="font-weight:600;">${st.userName}</div>
+                <div style="font-size:12px; color:#64748b;">Tap to view status</div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    });
+  }
+
+  function startCall(type) {
+    document.getElementById("call-user-name").innerText = document.getElementById("chat-with-title").innerText;
+    document.getElementById("call-type-label").innerText = type === "video" ? "Video Call..." : "Voice Call...";
+    document.getElementById("call-screen").style.display = "flex";
+
+    navigator.mediaDevices.getUserMedia({ video: type === "video", audio: true })
+      .then(stream => {
+        localStream = stream;
+        document.getElementById("local-video").srcObject = stream;
+      })
+      .catch(() => alert("Camera/Microphone access denied or unsupported on

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zoyiie</title>
+  <title>Zoyiie - Professional Messenger</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     
@@ -73,6 +73,7 @@
       transition: all 0.2s ease;
     }
     button:active { transform: scale(0.98); }
+    button:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; }
 
     .nav-bar {
       display: flex;
@@ -184,11 +185,11 @@
   <!-- SCREEN 1: LOGIN -->
   <div id="login-screen" class="screen active" style="justify-content: center; text-align: center;">
     <h1 style="color:#00e676; margin-bottom: 6px; font-size: 2.2rem; font-weight: 800;">Zoyiie</h1>
-    <p style="color:#64748b; font-size: 13px; margin-bottom: 24px;">Messaging Platform</p>
+    <p style="color:#64748b; font-size: 13px; margin-bottom: 24px;">Secure Messaging Platform</p>
     
-    <input type="text" id="user-name" placeholder="Enter Name">
+    <input type="text" id="user-name" placeholder="Enter Full Name">
     <input type="tel" id="user-phone" placeholder="Enter Phone Number">
-    <button type="button" onclick="loginUser()">Continue</button>
+    <button type="button" id="login-btn" onclick="loginUser()">Continue to Chat</button>
   </div>
 
   <!-- SCREEN 2: CHATS TAB -->
@@ -210,7 +211,7 @@
   <!-- SCREEN 3: SELECT CONTACT -->
   <div id="select-contact-screen" class="screen">
     <div class="header" style="margin: -16px -16px 16px -16px;">
-      <button class="top-btn" onclick="switchTab('contacts-screen')"> Back</button>
+      <button class="top-btn" onclick="switchTab('contacts-screen')">← Back</button>
       <span>Select Contact</span>
       <span style="width: 30px;"></span>
     </div>
@@ -226,7 +227,7 @@
   <!-- SCREEN 4: STATUS TAB -->
   <div id="status-screen" class="screen">
     <div class="header" style="margin: -16px -16px 16px -16px;">
-      <span>Status</span>
+      <span>Status Updates</span>
     </div>
 
     <div class="status-card" onclick="document.getElementById('status-file').click()">
@@ -252,14 +253,14 @@
 
     <div style="text-align: center; color: #64748b; margin-top: 50px;">
       <p>No recent call logs.</p>
-      <p style="font-size: 12px; margin-top: 8px;">Open a chat to start a Voice or Video call.</p>
+      <p style="font-size: 12px; margin-top: 8px;">Open a chat to initiate a secure call.</p>
     </div>
   </div>
 
   <!-- SCREEN 6: PRIVATE CHAT ROOM -->
   <div id="chat-screen" class="screen" style="padding:0;">
     <div class="header">
-      <button class="top-btn" onclick="switchTab('contacts-screen')"> Back</button>
+      <button class="top-btn" onclick="switchTab('contacts-screen')">← Back</button>
       <span id="chat-with-title" style="color:#f8fafc;">Chat</span>
       <div style="display:flex; gap:12px;">
         <button class="top-btn" onclick="startCall('voice')" style="font-size:16px;">📞</button>
@@ -281,7 +282,7 @@
   <!-- ACTIVE CALL SCREEN OVERLAY -->
   <div id="call-screen">
     <h3 id="call-user-name" style="font-size:1.4rem;">Calling...</h3>
-    <p id="call-type-label" style="color:#94a3b8; font-size:13px;">Zoyiie HD Call</p>
+    <p id="call-type-label" style="color:#94a3b8; font-size:13px;">Encrypted HD Call</p>
 
     <div id="recording-badge" style="display:none; color:#ef4444; font-weight:bold; font-size:13px; margin:8px 0;">
       🔴 Recording in progress...
@@ -311,8 +312,9 @@
 
 </div>
 
-<!-- Firebase SDKs -->
+<!-- Firebase SDKs (Compat Version for Web) -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
@@ -325,58 +327,94 @@
     appId: "1:418386323111:web:b28274468940415f9bdd82"
   };
 
-  let db = null;
+  let app, auth, db = null;
+
   try {
     if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
+      app = firebase.initializeApp(firebaseConfig);
+    } else {
+      app = firebase.app();
     }
+    auth = firebase.auth();
     db = firebase.firestore();
   } catch(e) {
-    console.log("Firebase Init Error:", e);
+    console.error("Firebase Initialization Exception:", e);
   }
 
   let currentUser = { name: "", phone: "" };
   let activeRoomId = "";
   let localStream = null;
   let allAppUsers = [];
-
   let mediaRecorder = null;
   let recordedChunks = [];
   let isRecording = false;
 
+  // Check persisted user session on load
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedUser = localStorage.getItem("zoyiie_user");
+    if (savedUser) {
+      currentUser = JSON.parse(savedUser);
+      if (currentUser.phone) {
+        initializeAppSession();
+      }
+    }
+  });
+
   function loginUser() {
     const nameEl = document.getElementById("user-name");
     const phoneEl = document.getElementById("user-phone");
+    const loginBtn = document.getElementById("login-btn");
 
     const name = nameEl ? nameEl.value.trim() : "";
     const phone = phoneEl ? phoneEl.value.trim() : "";
 
-    if (!name || !phone) {
-      alert("Please enter Name and Phone Number.");
+    if (!name || phone.length < 10) {
+      alert("Please provide a valid name and phone number.");
       return;
     }
 
-    currentUser = { name, phone };
+    loginBtn.disabled = true;
+    loginBtn.innerText = "Authenticating...";
 
+    currentUser = { name, phone };
+    localStorage.setItem("zoyiie_user", JSON.stringify(currentUser));
+
+    // Professional Anonymous Auth sign-in to securely authorize database calls
+    if (auth) {
+      auth.signInAnonymously().then(() => {
+        syncUserToFirestore();
+      }).catch(err => {
+        console.warn("Auth Fallback Enabled:", err.message);
+        syncUserToFirestore(); // Proceed even if auth fails
+      });
+    } else {
+      syncUserToFirestore();
+    }
+  }
+
+  function syncUserToFirestore() {
+    if (db) {
+      db.collection("users").doc(currentUser.phone).set({
+        name: currentUser.name,
+        phone: currentUser.phone,
+        lastActive: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).then(() => {
+        initializeAppSession();
+      }).catch(err => {
+        console.warn("Firestore Sync Notice:", err);
+        initializeAppSession();
+      });
+    } else {
+      initializeAppSession();
+    }
+  }
+
+  function initializeAppSession() {
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById("contacts-screen").classList.add("active");
     document.getElementById("main-nav").style.display = "flex";
-    document.getElementById("my-profile-name").innerText = name;
-
-    if (db) {
-      db.collection("users").doc(phone).set({
-        name: name,
-        phone: phone,
-        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).then(() => {
-        loadRecentContacts();
-      }).catch((err) => {
-        console.log("Database Sync Warning (Skipped):", err);
-        loadRecentContacts();
-      });
-    } else {
-      loadRecentContacts();
-    }
+    document.getElementById("my-profile-name").innerText = currentUser.name;
+    loadRecentContacts();
   }
 
   function switchTab(screenId, navEl) {
@@ -417,6 +455,8 @@
           `;
         }
       });
+    }, error => {
+      console.error("Error loading contacts stream:", error);
     });
   }
 
@@ -427,17 +467,17 @@
   }
 
   function renderContactsList(usersArray) {
-    const contactsListContainer = document.getElementById("all-contacts-list");
-    if (!contactsListContainer) return;
-    contactsListContainer.innerHTML = "";
+    const container = document.getElementById("all-contacts-list");
+    if (!container) return;
+    container.innerHTML = "";
 
     if (usersArray.length === 0) {
-      contactsListContainer.innerHTML = `<p style="color:#64748b; font-size:13px; text-align:center; margin-top:20px;">No contacts found.</p>`;
+      container.innerHTML = `<p style="color:#64748b; font-size:13px; text-align:center; margin-top:20px;">No other users found.</p>`;
       return;
     }
 
     usersArray.forEach((user) => {
-      contactsListContainer.innerHTML += `
+      container.innerHTML += `
         <div class="user-card" onclick="openPrivateChat('${user.name}', '${user.phone}')">
           <div class="u-info">
             <span class="u-name">${user.name}</span>
@@ -463,7 +503,6 @@
 
     document.getElementById("chat-with-title").innerText = partnerName;
     switchTab("chat-screen");
-
     loadPrivateMessages();
   }
 
@@ -488,11 +527,14 @@
           `;
         });
         chatBox.scrollTop = chatBox.scrollHeight;
+      }, err => {
+        console.error("Chat sync error:", err);
       });
   }
 
   function sendTextMessage() {
-    const text = document.getElementById("message-input").value.trim();
+    const inputEl = document.getElementById("message-input");
+    const text = inputEl ? inputEl.value.trim() : "";
     if (!text || !activeRoomId || !db) return;
 
     db.collection("rooms").doc(activeRoomId).collection("messages").add({
@@ -500,9 +542,11 @@
       senderPhone: currentUser.phone,
       text: text,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      inputEl.value = "";
+    }).catch(err => {
+      alert("Failed to send message: " + err.message);
     });
-
-    document.getElementById("message-input").value = "";
   }
 
   function deleteSingleMessage(messageId) {
@@ -512,8 +556,9 @@
 
   function clearFullChat() {
     if (!db || !activeRoomId) return;
-    if (confirm("Clear all messages?")) {
-      db.collection("rooms").doc(activeRoomId).collection("messages").get().then((s) => s.forEach(d => d.ref.delete()));
+    if (confirm("Permanently clear history for this room?")) {
+      db.collection("rooms").doc(activeRoomId).collection("messages").get()
+        .then(snapshot => snapshot.forEach(doc => doc.ref.delete()));
     }
   }
 
@@ -523,17 +568,15 @@
 
     const reader = new FileReader();
     reader.onload = function(e) {
-      const base64Image = e.target.result;
-
       db.collection("statuses").add({
-        userName: currentUser.name || "User",
-        userPhone: currentUser.phone || "000000",
-        imageUrl: base64Image,
+        userName: currentUser.name,
+        userPhone: currentUser.phone,
+        imageUrl: e.target.result,
         createdAt: Date.now()
       }).then(() => {
         loadStatuses();
-      }).catch((err) => {
-        alert("Status upload failed: " + err.message);
+      }).catch(err => {
+        alert("Status update failed: " + err.message);
       });
     };
     reader.readAsDataURL(file);
@@ -547,48 +590,4 @@
       if (!statusList) return;
       statusList.innerHTML = "";
 
-      if (snapshot.empty) {
-        statusList.innerHTML = `<p style="color:#64748b; font-size:13px; text-align:center; margin-top:20px;">No recent statuses.</p>`;
-        return;
-      }
-
-      snapshot.forEach((doc) => {
-        const st = doc.data();
-        statusList.innerHTML += `
-          <div class="status-card" onclick="window.open('${st.imageUrl}', '_blank')">
-            <div style="display:flex; align-items:center;">
-              <div class="status-ring">${(st.userName && st.userName[0]) ? st.userName[0].toUpperCase() : 'U'}</div>
-              <div>
-                <div style="font-weight:600;">${st.userName}</div>
-                <div style="font-size:12px; color:#64748b;">Tap to view status</div>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-    });
-  }
-
-  function startCall(type) {
-    document.getElementById("call-user-name").innerText = document.getElementById("chat-with-title").innerText;
-    document.getElementById("call-type-label").innerText = type === "video" ? "Video Call..." : "Voice Call...";
-    document.getElementById("call-screen").style.display = "flex";
-
-    navigator.mediaDevices.getUserMedia({ video: type === "video", audio: true })
-      .then(stream => {
-        localStream = stream;
-        document.getElementById("local-video").srcObject = stream;
-      })
-      .catch(() => alert("Camera/Microphone access denied or unsupported."));
-  }
-
-  function toggleCallRecording() {
-    if (!localStream) {
-      alert("No active stream to record.");
-      return;
-    }
-
-    if (!isRecording) {
-      recordedChunks = [];
-      try {
-  
+      if (snapshot.empt

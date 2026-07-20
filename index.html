@@ -3,104 +3,300 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zoyiie Messenger</title>
+  <title>Zoyiie Messenger - Professional</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #090d16; display: flex; justify-content: center; align-items: center; height: 100vh; color: #f1f5f9; }
-    .app-container { width: 100%; max-width: 450px; height: 95vh; background: #0f172a; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.08); position: relative; }
-    .header { background: #1e293b; color: #f8fafc; padding: 16px 20px; font-size: 1.05rem; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-    .screen { display: none; padding: 16px; flex: 1; flex-direction: column; overflow-y: auto; }
+    :root {
+      --bg-color: #0b141a;
+      --panel-bg: #111b21;
+      --header-bg: #202c33;
+      --input-bg: #2a3942;
+      --text-primary: #e9edef;
+      --text-secondary: #8696a0;
+      --accent-green: #00a884;
+      --accent-hover: #005c4b;
+      --danger: #ef4444;
+      --border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    body { 
+      background: #080c10; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      height: 100vh; 
+      color: var(--text-primary); 
+    }
+
+    .app-container { 
+      width: 100%; 
+      max-width: 480px; 
+      height: 100vh; 
+      max-height: 920px;
+      background: var(--bg-color); 
+      border-radius: 20px; 
+      display: flex; 
+      flex-direction: column; 
+      overflow: hidden; 
+      box-shadow: 0 25px 50px rgba(0,0,0,0.8); 
+      border: 1px solid var(--border-color); 
+      position: relative; 
+    }
+
+    .screen { display: none; flex: 1; flex-direction: column; height: 100%; overflow: hidden; background: var(--bg-color); }
     .screen.active { display: flex !important; }
-    input[type="text"], input[type="tel"] { width: 100%; padding: 14px 18px; margin: 10px 0; border: 1px solid #334155; border-radius: 14px; font-size: 14px; background: #1e293b; color: #f8fafc; outline: none; }
-    button { width: 100%; padding: 14px; background: #00e676; color: #090d16; border: none; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 10px; }
-    .user-card, .status-card { background: #1e293b; padding: 14px 18px; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.04); }
-    .u-name { font-weight: 600; color: #f8fafc; font-size: 15px; }
-    #chat-box { flex: 1; overflow-y: auto; padding: 18px; background-color: #0b1120; display: flex; flex-direction: column; gap: 12px; }
-    .msg-card { max-width: 78%; padding: 10px 14px; border-radius: 14px; font-size: 14px; word-wrap: break-word; }
-    .msg-card.sent { background: #005c4b; color: #f1f5f9; align-self: flex-end; }
-    .msg-card.received { background: #1e293b; color: #e2e8f0; align-self: flex-start; }
-    .input-area { padding: 12px; background: #1e293b; display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
-    .top-btn { background: none; color: #38bdf8; border: none; font-size: 13px; cursor: pointer; width: auto; margin:0; }
-    .nav-bar { display: flex; background: #1e293b; border-top: 1px solid rgba(255,255,255,0.05); }
-    .nav-tab { flex: 1; text-align: center; padding: 14px; color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .nav-tab.active { color: #00e676; border-top: 2px solid #00e676; background: rgba(0,230,118,0.03); }
-    .action-icon-btn { background: none; border: none; font-size: 16px; cursor: pointer; padding: 6px 10px; border-radius: 8px; margin: 0; width: auto; }
+
+    /* HEADER */
+    .app-header { 
+      background: var(--header-bg); 
+      color: var(--text-primary); 
+      padding: 14px 18px; 
+      font-size: 1.1rem; 
+      font-weight: 600; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border-bottom: 1px solid var(--border-color);
+      min-height: 60px;
+    }
+
+    /* LOGIN SCREEN STYLES */
+    #login-screen {
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      text-align: center;
+      background: var(--panel-bg);
+    }
+
+    .login-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      color: #0b141a;
+      font-weight: 800;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 20px rgba(0,168,132,0.3);
+    }
+
+    .form-group {
+      width: 100%;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .form-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      display: block;
+      font-weight: 500;
+    }
+
+    .app-input { 
+      width: 100%; 
+      padding: 14px 16px; 
+      border: 1px solid var(--border-color); 
+      border-radius: 12px; 
+      font-size: 15px; 
+      background: var(--input-bg); 
+      color: var(--text-primary); 
+      outline: none; 
+      transition: border 0.3s;
+    }
+
+    .app-input:focus {
+      border-color: var(--accent-green);
+    }
+
+    .app-btn { 
+      width: 100%; 
+      padding: 14px; 
+      background: var(--accent-green); 
+      color: #0b141a; 
+      border: none; 
+      border-radius: 12px; 
+      font-weight: 700; 
+      font-size: 15px; 
+      cursor: pointer; 
+      margin-top: 10px;
+      transition: opacity 0.2s;
+    }
+
+    .app-btn:active { opacity: 0.8; }
+
+    /* CONTENT AREAS */
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    /* CARDS */
+    .card-item { 
+      background: var(--panel-bg); 
+      padding: 12px 16px; 
+      border-radius: 14px; 
+      margin-bottom: 8px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      border: 1px solid var(--border-color); 
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .card-item:hover { background: rgba(255,255,255,0.02); }
+
+    .card-title { font-weight: 600; color: var(--text-primary); font-size: 15px; }
+    .card-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+
+    /* CHAT ROOM */
+    #chat-box { 
+      flex: 1; 
+      overflow-y: auto; 
+      padding: 16px; 
+      background-color: #080c10; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 10px; 
+    }
+
+    .msg-card { 
+      max-width: 80%; 
+      padding: 10px 14px; 
+      border-radius: 12px; 
+      font-size: 14px; 
+      word-wrap: break-word; 
+      line-height: 1.4;
+    }
+    .msg-card.sent { background: #005c4b; color: var(--text-primary); align-self: flex-end; border-top-right-radius: 2px; }
+    .msg-card.received { background: var(--panel-bg); color: var(--text-primary); align-self: flex-start; border-top-left-radius: 2px; border: 1px solid var(--border-color); }
+
+    .chat-input-area { 
+      padding: 12px; 
+      background: var(--header-bg); 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      border-top: 1px solid var(--border-color); 
+    }
+
+    /* NAVIGATION BAR */
+    .nav-bar { 
+      display: flex; 
+      background: var(--header-bg); 
+      border-top: 1px solid var(--border-color); 
+    }
+    .nav-tab { 
+      flex: 1; 
+      text-align: center; 
+      padding: 14px; 
+      color: var(--text-secondary); 
+      font-size: 13px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: color 0.2s;
+    }
+    .nav-tab.active { color: var(--accent-green); background: rgba(0,168,132,0.05); border-bottom: 3px solid var(--accent-green); }
+
+    .action-icon { background: none; border: none; font-size: 18px; cursor: pointer; padding: 6px; color: var(--text-primary); }
+    .top-action-btn { background: none; border: none; color: #38bdf8; font-size: 13px; cursor: pointer; font-weight: 600; }
   </style>
 </head>
 <body>
 
 <div class="app-container">
 
-  <!-- SCREEN 1: LOGIN -->
-  <div id="login-screen" class="screen active" style="justify-content: center; text-align: center;">
-    <h1 style="color:#00e676; margin-bottom: 6px; font-size: 2.2rem; font-weight: 800;">Zoyiie</h1>
-    <p style="color:#64748b; font-size: 13px; margin-bottom: 24px;">Secure Messaging Platform</p>
+  <!-- 1. LOGIN SCREEN (Strictly First Screen) -->
+  <div id="login-screen" class="screen">
+    <div class="login-logo">Z</div>
+    <h1 style="color:var(--text-primary); margin-bottom: 8px; font-size: 1.8rem; font-weight: 700;">Welcome to Zoyiie</h1>
+    <p style="color:var(--text-secondary); font-size: 13px; margin-bottom: 30px;">Verify your mobile number to get started</p>
     
-    <input type="text" id="user-name" placeholder="Enter Full Name">
-    <input type="tel" id="user-phone" placeholder="Enter Phone Number">
-    <button type="button" onclick="loginUser()">Continue to Chat</button>
+    <div class="form-group">
+      <label class="form-label">Full Name</label>
+      <input type="text" id="user-name" class="app-input" placeholder="e.g. Rahul Sharma">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Phone Number</label>
+      <input type="tel" id="user-phone" class="app-input" placeholder="10-digit mobile number">
+    </div>
+
+    <button type="button" class="app-btn" onclick="loginUser()">Agree and Continue</button>
   </div>
 
-  <!-- SCREEN 2: CHATS TAB -->
+  <!-- 2. CHATS TAB SCREEN -->
   <div id="contacts-screen" class="screen">
-    <div class="header" style="margin: -16px -16px 16px -16px;">
-      <span>Chats</span>
-      <span id="my-profile-name" style="font-size: 13px; color: #94a3b8;"></span>
+    <div class="app-header">
+      <span>Zoyiie Chats</span>
+      <span id="my-profile-name" style="font-size: 12px; color: var(--accent-green); background: rgba(0,168,132,0.1); padding: 4px 10px; border-radius: 20px;"></span>
     </div>
 
-    <!-- Start New Conversation Section -->
-    <div style="margin-bottom: 20px; background: #1e293b; padding: 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04);">
-      <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Start new conversation:</p>
-      <input type="tel" id="new-chat-phone" placeholder="Enter Phone Number..." style="margin-bottom: 10px;">
-      <button onclick="startNewChat()" style="margin: 0;">Start Chat</button>
-    </div>
+    <div class="content-body">
+      <!-- Start New Chat Box -->
+      <div style="background: var(--panel-bg); padding: 14px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--border-color);">
+        <label class="form-label">Start new conversation</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="tel" id="new-chat-phone" class="app-input" placeholder="Enter recipient phone..." style="margin:0;">
+          <button class="app-btn" onclick="startNewChat()" style="width: 110px; margin:0; padding: 0;">Chat</button>
+        </div>
+      </div>
 
-    <h4 style="color:#64748b; margin-bottom: 12px; font-size: 13px; text-transform: uppercase;">Recent Contacts</h4>
-    <div id="recent-users-list" style="overflow-y: auto; flex:1;"></div>
+      <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; font-weight: 600; letter-spacing: 0.5px;">Recent Contacts</div>
+      <div id="recent-users-list"></div>
+    </div>
   </div>
 
-  <!-- SCREEN 3: STATUS TAB -->
+  <!-- 3. STATUS TAB SCREEN -->
   <div id="status-screen" class="screen">
-    <div class="header" style="margin: -16px -16px 16px -16px;">
+    <div class="app-header">
       <span>Status Updates</span>
-      <label style="background: #00e676; color: #090d16; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+      <label style="background: var(--accent-green); color: #0b141a; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
         + Add Status <input type="file" id="status-file-input" accept="image/*" style="display:none;" onchange="uploadStatusImage(event)">
       </label>
     </div>
-    <div id="status-list" style="overflow-y: auto; flex:1;"></div>
+    <div class="content-body" id="status-list"></div>
   </div>
 
-  <!-- SCREEN 4: PRIVATE CHAT ROOM -->
-  <div id="chat-screen" class="screen" style="padding:0;">
-    <div class="header">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button class="top-btn" onclick="switchMainTab('contacts-screen')">←</button>
-        <span id="chat-with-title" style="color:#f8fafc; font-size: 15px;">Chat</span>
+  <!-- 4. PRIVATE CHAT ROOM SCREEN -->
+  <div id="chat-screen" class="screen">
+    <div class="app-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button class="top-action-btn" onclick="switchMainTab('contacts-screen')">← Back</button>
+        <span id="chat-with-title" style="font-size: 15px;">Chat</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 4px;">
-        <button class="action-icon-btn" onclick="startVideoCall()" title="In-App Video Call" style="color:#38bdf8;">📹 Call</button>
-        <button class="top-btn" onclick="clearFullChat()" style="color:#ef4444; font-size: 12px; margin-left: 6px;">Clear</button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="action-icon" onclick="startVideoCall()" title="Video Call">📹</button>
+        <button class="top-action-btn" onclick="clearFullChat()" style="color: var(--danger);">Clear</button>
       </div>
     </div>
 
     <div id="chat-box"></div>
 
-    <div class="input-area">
-      <input type="text" id="message-input" placeholder="Type a message..." style="margin:0;">
-      <button onclick="sendTextMessage()" style="width:auto; padding:12px 20px; margin:0;">Send</button>
+    <div class="chat-input-area">
+      <input type="text" id="message-input" class="app-input" placeholder="Type a message..." style="margin:0;">
+      <button class="app-btn" onclick="sendTextMessage()" style="width: auto; padding: 12px 20px; margin:0;">Send</button>
     </div>
   </div>
 
-  <!-- SCREEN 5: IN-APP VIDEO CALL SCREEN -->
-  <div id="call-screen" class="screen" style="padding:0; background:#000;">
-    <div style="display:flex; justify-content:space-between; padding:10px 16px; background:#1e293b; align-items:center;">
-      <span style="color:#fff; font-size:14px; font-weight:650;">Zoyiie Live Call</span>
-      <button onclick="endVideoCall()" style="background:#ef4444; color:#fff; width:auto; padding:6px 14px; margin:0; border-radius:8px; font-size:12px;">End Call</button>
+  <!-- 5. IN-APP LIVE CALL SCREEN -->
+  <div id="call-screen" class="screen" style="background:#000;">
+    <div class="app-header">
+      <span style="font-size: 14px;">Zoyiie Secure Call</span>
+      <button onclick="endVideoCall()" style="background: var(--danger); color: #fff; border:none; padding: 6px 14px; border-radius: 8px; font-weight:600; cursor:pointer;">End Call</button>
     </div>
     <div id="call-frame-container" style="flex:1; width:100%; height:100%;"></div>
   </div>
 
-  <!-- BOTTOM NAVIGATION BAR -->
+  <!-- BOTTOM NAVIGATION BAR (Visible only after login) -->
   <div id="bottom-nav" class="nav-bar" style="display: none;">
     <div class="nav-tab active" id="tab-chats" onclick="switchMainTab('contacts-screen')">Chats</div>
     <div class="nav-tab" id="tab-status" onclick="switchMainTab('status-screen')">Status</div>
@@ -135,22 +331,33 @@
   let currentUser = { name: "", phone: "" };
   let activeRoomId = "";
 
+  // Check login session on startup
   window.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem("zoyiie_user");
     if (saved) {
       currentUser = JSON.parse(saved);
       if (currentUser.phone) {
         showMainApp();
+      } else {
+        showLoginScreen();
       }
+    } else {
+      showLoginScreen();
     }
   });
+
+  function showLoginScreen() {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("login-screen").classList.add("active");
+    document.getElementById("bottom-nav").style.display = "none";
+  }
 
   function loginUser() {
     const name = document.getElementById("user-name").value.trim();
     const phone = document.getElementById("user-phone").value.trim();
 
     if (!name || phone.length < 10) {
-      alert("Please enter a valid name and phone number (min 10 digits).");
+      alert("Please enter a valid name and 10-digit phone number.");
       return;
     }
 
@@ -227,19 +434,19 @@
         if (u.phone !== currentUser.phone) {
           count++;
           list.innerHTML += `
-            <div class="user-card" onclick="openPrivateChat('${u.name || u.phone}', '${u.phone}')">
+            <div class="card-item" onclick="openPrivateChat('${u.name || u.phone}', '${u.phone}')">
               <div>
-                <span class="u-name">${u.name || 'User'}</span>
-                <div style="font-size:12px; color:#64748b; margin-top:2px;">${u.phone}</div>
+                <div class="card-title">${u.name || 'User'}</div>
+                <div class="card-subtitle">${u.phone}</div>
               </div>
-              <span style="color:#00e676; font-size:13px; font-weight:600;">Chat</span>
+              <span style="color:var(--accent-green); font-size:13px; font-weight:600;">Message</span>
             </div>
           `;
         }
       });
 
       if (count === 0) {
-        list.innerHTML = `<p style="color:#64748b; font-size:13px; text-align:center; margin-top:20px;">No recent contacts found. Use the box above to start a chat.</p>`;
+        list.innerHTML = `<p style="color:var(--text-secondary); font-size:13px; text-align:center; margin-top:20px;">No other users found yet. Use the box above to start chatting.</p>`;
       }
     });
   }
@@ -307,7 +514,7 @@
 
   function clearFullChat() {
     if (!db || !activeRoomId) return;
-    if (confirm("Clear chat?")) {
+    if (confirm("Are you sure you want to clear this chat?")) {
       db.collection("rooms").doc(activeRoomId).collection("messages").get()
         .then(snap => snap.forEach(d => d.ref.delete()));
     }
@@ -342,7 +549,7 @@
       statusList.innerHTML = "";
 
       if (snapshot.empty) {
-        statusList.innerHTML = `<p style="color:#64748b; text-align:center; margin-top:20px;">No status updates yet.</p>`;
+        statusList.innerHTML = `<p style="color:var(--text-secondary); text-align:center; margin-top:20px;">No status updates available.</p>`;
         return;
       }
 
@@ -350,12 +557,12 @@
         const s = doc.data();
         const timeAgo = Math.floor((Date.now() - s.createdAt) / 60000);
         statusList.innerHTML += `
-          <div class="status-card" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+          <div class="card-item" style="flex-direction: column; align-items: flex-start; gap: 10px; cursor: default;">
             <div style="display:flex; justify-content:space-between; width:100%;">
-              <span class="u-name">${s.userName}</span>
-              <span style="color:#64748b; font-size:12px;">${timeAgo < 1 ? 'Just now' : timeAgo + 'm ago'}</span>
+              <span class="card-title">${s.userName}</span>
+              <span style="color:var(--text-secondary); font-size:11px;">${timeAgo < 1 ? 'Just now' : timeAgo + 'm ago'}</span>
             </div>
-            <img src="${s.imageUrl}" style="width:100%; max-height:250px; object-fit:cover; border-radius:12px;" />
+            <img src="${s.imageUrl}" style="width:100%; max-height:220px; object-fit:cover; border-radius:10px;" />
           </div>
         `;
       });
@@ -363,4 +570,4 @@
   }
 </script>
 </body>
-  </html>
+</html>

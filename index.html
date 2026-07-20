@@ -528,4 +528,69 @@
     });
   }
 
-  f
+  function openStoryViewer(statusId, ownerName, ownerPhone, imageUrl, createdAt, viewersEncoded) {
+    activeViewingStatusId = statusId;
+    activeViewingStatusOwner = ownerPhone;
+    
+    document.getElementById("story-owner-name").innerText = ownerName;
+    document.getElementById("story-time").innerText = new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById("story-image-preview").src = imageUrl;
+
+    const menuBtn = document.getElementById("story-menu-btn");
+    if (ownerPhone === currentUser.phone) {
+      menuBtn.style.display = "block";
+    } else {
+      menuBtn.style.display = "none";
+      document.getElementById("story-dropdown").style.display = "none";
+    }
+
+    let viewers = JSON.parse(decodeURIComponent(viewersEncoded));
+    renderViewers(viewers);
+
+    if (ownerPhone !== currentUser.phone) {
+      const alreadyViewed = viewers.some(v => v.phone === currentUser.phone);
+      if (!alreadyViewed) {
+        const viewRecord = { name: currentUser.name, phone: currentUser.phone, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+        viewers.push(viewRecord);
+        db.collection("statuses").doc(statusId).update({ viewers: viewers }).catch(e => console.log(e));
+      }
+    }
+
+    document.getElementById("story-modal").style.display = "flex";
+  }
+
+  function renderViewers(viewers) {
+    const listContainer = document.getElementById("story-viewers-list");
+    listContainer.innerHTML = "";
+    if (!viewers || viewers.length === 0) {
+      listContainer.innerHTML = `<span style="color:var(--text-secondary);">No views yet</span>`;
+      return;
+    }
+    viewers.forEach(v => {
+      listContainer.innerHTML += `<div>• <b>${v.name}</b> viewed at ${v.time}</div>`;
+    });
+  }
+
+  function toggleStoryMenu() {
+    const dropdown = document.getElementById("story-dropdown");
+    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+  }
+
+  function deleteCurrentStatus() {
+    if (!activeViewingStatusId || activeViewingStatusOwner !== currentUser.phone) return;
+    if (confirm("Are you sure you want to delete this status?")) {
+      db.collection("statuses").doc(activeViewingStatusId).delete().then(() => {
+        closeStoryModal();
+        loadStatuses();
+      }).catch(err => alert("Error deleting status: " + err.message));
+    }
+  }
+
+  function closeStoryModal() {
+    document.getElementById("story-modal").style.display = "none";
+    document.getElementById("story-dropdown").style.display = "none";
+    activeViewingStatusId = null;
+  }
+</script>
+</body>
+</html>

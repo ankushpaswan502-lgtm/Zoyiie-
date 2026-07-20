@@ -118,6 +118,7 @@
       font-weight: bold;
       margin-right: 12px;
       background: #334155;
+      color: #fff;
     }
 
     /* Chat Area */
@@ -203,7 +204,7 @@
 
     <!-- Start Chat Button -->
     <div style="margin-bottom: 18px;">
-      <p style="font-size: 12px; color: #94a3b8; margin-bottom: 6px;">Start new conversation:</p>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 6px;">Start new conversation:</p>
       <button onclick="openNewChatScreen()" style="margin:0;">Start Chat</button>
     </div>
 
@@ -244,7 +245,7 @@
       <input type="file" id="status-file" accept="image/*" style="display:none;" onchange="uploadStatus(event)">
     </div>
 
-    <h4 style="color:#64748b; margin: 12px 0; font-size: 13px; text-transform: uppercase;">Recent Updates (24h)</h4>
+    <h4 style="color:#64748b; margin: 12px 0; font-size: 13px; text-transform: uppercase;">Recent Updates</h4>
     <div id="status-list" style="overflow-y: auto; flex:1;"></div>
   </div>
 
@@ -348,7 +349,6 @@
   let recordedChunks = [];
   let isRecording = false;
 
-  /* GUARANTEED INSTANT LOGIN FUNCTION */
   function loginUser() {
     const nameEl = document.getElementById("user-name");
     const phoneEl = document.getElementById("user-phone");
@@ -363,13 +363,11 @@
 
     currentUser = { name, phone };
 
-    // 1. Forcefully Switch View Immediately
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById("contacts-screen").classList.add("active");
     document.getElementById("main-nav").style.display = "flex";
     document.getElementById("my-profile-name").innerText = name;
 
-    // 2. Async Firebase Save
     if (db) {
       db.collection("users").doc(phone).set({
         name: name,
@@ -379,10 +377,7 @@
         loadRecentContacts();
       }).catch((err) => {
         console.log("Database Sync Error:", err);
-        alert("Firebase Error: " + err.message);
       });
-    } else {
-      alert("Firebase Initialization Failed.");
     }
   }
 
@@ -424,8 +419,6 @@
           `;
         }
       });
-    }, (error) => {
-      console.log("Firestore Error:", error);
     });
   }
 
@@ -526,43 +519,49 @@
     }
   }
 
+  // FIXED STATUS UPLOAD
   function uploadStatus(event) {
     const file = event.target.files[0];
     if (!file || !db) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "docs_upload_example_us_preset");
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64Image = e.target.result;
 
-    fetch(`https://api.cloudinary.com/v1_1/demo/image/upload`, { method: "POST", body: formData })
-      .then(r => r.json())
-      .then(data => {
-        if (data.secure_url) {
-          db.collection("statuses").add({
-            userName: currentUser.name,
-            userPhone: currentUser.phone,
-            imageUrl: data.secure_url,
-            createdAt: Date.now()
-          });
-          alert("Status updated!");
-        }
+      db.collection("statuses").add({
+        userName: currentUser.name || "User",
+        userPhone: currentUser.phone || "000000",
+        imageUrl: base64Image,
+        createdAt: Date.now()
+      }).then(() => {
+        loadStatuses();
+      }).catch((err) => {
+        alert("Status upload failed: " + err.message);
       });
+    };
+    reader.readAsDataURL(file);
   }
 
+  // FIXED STATUS LOAD
   function loadStatuses() {
     if (!db) return;
-    const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
 
-    db.collection("statuses").where("createdAt", ">", twentyFourHoursAgo).onSnapshot((snapshot) => {
+    db.collection("statuses").onSnapshot((snapshot) => {
       const statusList = document.getElementById("status-list");
       if (!statusList) return;
       statusList.innerHTML = "";
+
+      if (snapshot.empty) {
+        statusList.innerHTML = `<p style="color:#64748b; font-size:13px; text-align:center; margin-top:20px;">No recent statuses.</p>`;
+        return;
+      }
+
       snapshot.forEach((doc) => {
         const st = doc.data();
         statusList.innerHTML += `
           <div class="status-card" onclick="window.open('${st.imageUrl}', '_blank')">
             <div style="display:flex; align-items:center;">
-              <div class="status-ring">${st.userName[0]}</div>
+              <div class="status-ring">${(st.userName && st.userName[0]) ? st.userName[0].toUpperCase() : 'U'}</div>
               <div>
                 <div style="font-weight:600;">${st.userName}</div>
                 <div style="font-size:12px; color:#64748b;">Tap to view status</div>
@@ -584,99 +583,9 @@
         localStream = stream;
         document.getElementById("local-video").srcObject = stream;
       })
-      .catch(() => alert("Camera/Microphone access denied or unsupported on this device."));
+      .catch(() => alert("Camera/Microphone access denied or unsupported."));
   }
 
   function toggleCallRecording() {
     if (!localStream) {
-      alert("No active stream to record.");
-      return;
-    }
-
-    if (!isRecording) {
-      recordedChunks = [];
-      try {
-        mediaRecorder = new MediaRecorder(localStream, { mimeType: 'video/webm;codecs=vp8,opus' });
-      } catch (e) {
-        mediaRecorder = new MediaRecorder(localStream);
-      }
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) recordedChunks.push(event.data);
-      };
-
-      mediaRecorder.onstop = saveRecordingLocally;
-
-      mediaRecorder.start();
-      isRecording = true;
-
-      document.getElementById("recording-badge").style.display = "block";
-      document.getElementById("rec-btn").innerText = "⏹️ Stop Recording";
-      document.getElementById("rec-btn").style.background = "#ef4444";
-    } else {
-      stopRecordingLogic();
-    }
-  }
-
-  function stopRecordingLogic() {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      isRecording = false;
-
-      document.getElementById("recording-badge").style.display = "none";
-      document.getElementById("rec-btn").innerText = "⏺️ Record Call";
-      document.getElementById("rec-btn").style.background = "#334155";
-    }
-  }
-
-  function saveRecordingLocally() {
-    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = `Zoyiie_Call_Record_${Date.now()}.webm`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    }, 100);
-  }
-
-  function endCall() {
-    if (isRecording) {
-      stopRecordingLogic();
-    }
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
-    }
-    document.getElementById("call-screen").style.display = "none";
-  }
-
-  function uploadToCloudinary(event) {
-    const file = event.target.files[0];
-    if (!file || !activeRoomId || !db) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "docs_upload_example_us_preset");
-
-    fetch(`https://api.cloudinary.com/v1_1/demo/image/upload`, { method: "POST", body: formData })
-      .then(r => r.json())
-      .then(data => {
-        if (data.secure_url) {
-          db.collection("rooms").doc(activeRoomId).collection("messages").add({
-            senderName: currentUser.name,
-            senderPhone: currentUser.phone,
-            text: "",
-            mediaUrl: data.secure_url,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }
-      });
-  }
-</script>
-</body>
-</html>
+      alert("No

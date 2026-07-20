@@ -74,7 +74,6 @@
     }
     button:active { transform: scale(0.98); }
 
-    /* Bottom Navigation Bar */
     .nav-bar {
       display: flex;
       background: #1e293b;
@@ -91,7 +90,6 @@
     }
     .nav-item.active-nav { color: #00e676; }
 
-    /* User Cards & Status List */
     .user-card, .status-card { 
       background: #1e293b; 
       padding: 14px 18px; 
@@ -121,7 +119,6 @@
       color: #fff;
     }
 
-    /* Chat Area */
     #chat-box { 
       flex: 1; 
       overflow-y: auto; 
@@ -155,7 +152,6 @@
     }
     .top-btn { background: none; color: #38bdf8; border: none; font-size: 13px; cursor: pointer; width: auto; margin:0; }
 
-    /* Call Overlay Screen */
     #call-screen {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -202,7 +198,6 @@
       <span id="my-profile-name" style="font-size: 13px; color: #94a3b8;"></span>
     </div>
 
-    <!-- Start Chat Button -->
     <div style="margin-bottom: 18px;">
       <p style="font-size: 12px; color: #64748b; margin-bottom: 6px;">Start new conversation:</p>
       <button onclick="openNewChatScreen()" style="margin:0;">Start Chat</button>
@@ -376,8 +371,11 @@
       }, { merge: true }).then(() => {
         loadRecentContacts();
       }).catch((err) => {
-        console.log("Database Sync Error:", err);
+        console.log("Database Sync Warning (Skipped):", err);
+        loadRecentContacts();
       });
+    } else {
+      loadRecentContacts();
     }
   }
 
@@ -519,7 +517,6 @@
     }
   }
 
-  // FIXED STATUS UPLOAD
   function uploadStatus(event) {
     const file = event.target.files[0];
     if (!file || !db) return;
@@ -542,7 +539,6 @@
     reader.readAsDataURL(file);
   }
 
-  // FIXED STATUS LOAD
   function loadStatuses() {
     if (!db) return;
 
@@ -588,4 +584,11 @@
 
   function toggleCallRecording() {
     if (!localStream) {
-      alert("No
+      alert("No active stream to record.");
+      return;
+    }
+
+    if (!isRecording) {
+      recordedChunks = [];
+      try {
+  

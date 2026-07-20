@@ -13,7 +13,7 @@
     .screen.active { display: flex !important; }
     input[type="text"], input[type="tel"] { width: 100%; padding: 14px 18px; margin: 10px 0; border: 1px solid #334155; border-radius: 14px; font-size: 14px; background: #1e293b; color: #f8fafc; outline: none; }
     button { width: 100%; padding: 14px; background: #00e676; color: #090d16; border: none; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 10px; }
-    .user-card, .status-card { background: #1e293b; padding: 14px 18px; border-radius: 16px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.04); }
+    .user-card, .status-card { background: #1e293b; padding: 14px 18px; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.04); }
     .u-name { font-weight: 600; color: #f8fafc; font-size: 15px; }
     #chat-box { flex: 1; overflow-y: auto; padding: 18px; background-color: #0b1120; display: flex; flex-direction: column; gap: 12px; }
     .msg-card { max-width: 78%; padding: 10px 14px; border-radius: 14px; font-size: 14px; word-wrap: break-word; }
@@ -24,6 +24,7 @@
     .nav-bar { display: flex; background: #1e293b; border-top: 1px solid rgba(255,255,255,0.05); }
     .nav-tab { flex: 1; text-align: center; padding: 14px; color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; }
     .nav-tab.active { color: #00e676; border-top: 2px solid #00e676; background: rgba(0,230,118,0.03); }
+    .action-icon-btn { background: none; border: none; font-size: 16px; cursor: pointer; padding: 6px 10px; border-radius: 8px; margin: 0; width: auto; }
   </style>
 </head>
 <body>
@@ -46,6 +47,14 @@
       <span>Chats</span>
       <span id="my-profile-name" style="font-size: 13px; color: #94a3b8;"></span>
     </div>
+
+    <!-- Start New Conversation Section -->
+    <div style="margin-bottom: 20px; background: #1e293b; padding: 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04);">
+      <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Start new conversation:</p>
+      <input type="tel" id="new-chat-phone" placeholder="Enter Phone Number..." style="margin-bottom: 10px;">
+      <button onclick="startNewChat()" style="margin: 0;">Start Chat</button>
+    </div>
+
     <h4 style="color:#64748b; margin-bottom: 12px; font-size: 13px; text-transform: uppercase;">Recent Contacts</h4>
     <div id="recent-users-list" style="overflow-y: auto; flex:1;"></div>
   </div>
@@ -64,9 +73,14 @@
   <!-- SCREEN 4: PRIVATE CHAT ROOM -->
   <div id="chat-screen" class="screen" style="padding:0;">
     <div class="header">
-      <button class="top-btn" onclick="switchMainTab('contacts-screen')">← Back</button>
-      <span id="chat-with-title" style="color:#f8fafc;">Chat</span>
-      <button class="top-btn" onclick="clearFullChat()" style="color:#ef4444;">Clear</button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="top-btn" onclick="switchMainTab('contacts-screen')">←</button>
+        <span id="chat-with-title" style="color:#f8fafc; font-size: 15px;">Chat</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <button class="action-icon-btn" onclick="startVideoCall()" title="In-App Video Call" style="color:#38bdf8;">📹 Call</button>
+        <button class="top-btn" onclick="clearFullChat()" style="color:#ef4444; font-size: 12px; margin-left: 6px;">Clear</button>
+      </div>
     </div>
 
     <div id="chat-box"></div>
@@ -75,6 +89,15 @@
       <input type="text" id="message-input" placeholder="Type a message..." style="margin:0;">
       <button onclick="sendTextMessage()" style="width:auto; padding:12px 20px; margin:0;">Send</button>
     </div>
+  </div>
+
+  <!-- SCREEN 5: IN-APP VIDEO CALL SCREEN -->
+  <div id="call-screen" class="screen" style="padding:0; background:#000;">
+    <div style="display:flex; justify-content:space-between; padding:10px 16px; background:#1e293b; align-items:center;">
+      <span style="color:#fff; font-size:14px; font-weight:650;">Zoyiie Live Call</span>
+      <button onclick="endVideoCall()" style="background:#ef4444; color:#fff; width:auto; padding:6px 14px; margin:0; border-radius:8px; font-size:12px;">End Call</button>
+    </div>
+    <div id="call-frame-container" style="flex:1; width:100%; height:100%;"></div>
   </div>
 
   <!-- BOTTOM NAVIGATION BAR -->
@@ -155,7 +178,6 @@
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById(screenId).classList.add("active");
     
-    // Highlight nav tabs
     document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
     if (screenId === "contacts-screen") {
       document.getElementById("tab-chats").classList.add("active");
@@ -166,6 +188,32 @@
     }
   }
 
+  function startNewChat() {
+    const targetPhone = document.getElementById("new-chat-phone").value.trim();
+    if (!targetPhone || targetPhone.length < 10) {
+      alert("Please enter a valid 10-digit phone number.");
+      return;
+    }
+    if (targetPhone === currentUser.phone) {
+      alert("You cannot chat with yourself.");
+      return;
+    }
+
+    if (db) {
+      db.collection("users").doc(targetPhone).get().then(doc => {
+        let partnerName = targetPhone;
+        if (doc.exists) {
+          partnerName = doc.data().name || targetPhone;
+        }
+        openPrivateChat(partnerName, targetPhone);
+      }).catch(() => {
+        openPrivateChat(targetPhone, targetPhone);
+      });
+    } else {
+      openPrivateChat(targetPhone, targetPhone);
+    }
+  }
+
   function loadUsers() {
     if (!db) return;
     db.collection("users").onSnapshot(snapshot => {
@@ -173,17 +221,26 @@
       if (!list) return;
       list.innerHTML = "";
       
+      let count = 0;
       snapshot.forEach(doc => {
         const u = doc.data();
         if (u.phone !== currentUser.phone) {
+          count++;
           list.innerHTML += `
-            <div class="user-card" onclick="openPrivateChat('${u.name}', '${u.phone}')">
-              <span class="u-name">${u.name}</span>
-              <span style="color:#00e676; font-size:13px; font-weight:600;">Chat →</span>
+            <div class="user-card" onclick="openPrivateChat('${u.name || u.phone}', '${u.phone}')">
+              <div>
+                <span class="u-name">${u.name || 'User'}</span>
+                <div style="font-size:12px; color:#64748b; margin-top:2px;">${u.phone}</div>
+              </div>
+              <span style="color:#00e676; font-size:13px; font-weight:600;">Chat</span>
             </div>
           `;
         }
       });
+
+      if (count === 0) {
+        list.innerHTML = `<p style="color:#64748b; font-size:13px; text-align:center; margin-top:20px;">No recent contacts found. Use the box above to start a chat.</p>`;
+      }
     });
   }
 
@@ -196,6 +253,20 @@
     document.getElementById("chat-screen").classList.add("active");
     document.getElementById("bottom-nav").style.display = "none";
     loadMessages();
+  }
+
+  function startVideoCall() {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("call-screen").classList.add("active");
+    
+    const container = document.getElementById("call-frame-container");
+    container.innerHTML = `<iframe src="https://meet.jit.si/ZoyiieSecureCall_${activeRoomId}" allow="camera; microphone; fullscreen; display-capture" style="width:100%; height:100%; border:none;"></iframe>`;
+  }
+
+  function endVideoCall() {
+    document.getElementById("call-frame-container").innerHTML = "";
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("chat-screen").classList.add("active");
   }
 
   function loadMessages() {
@@ -242,7 +313,6 @@
     }
   }
 
-  // Status / Story Upload Functions
   function uploadStatusImage(event) {
     const file = event.target.files[0];
     if (!file || !db) return;
@@ -278,10 +348,10 @@
 
       snapshot.forEach(doc => {
         const s = doc.data();
-        const timeAgo = Math.floor((Date.now() - s.createdAt) / 60000); // minutes ago
+        const timeAgo = Math.floor((Date.now() - s.createdAt) / 60000);
         statusList.innerHTML += `
           <div class="status-card" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-            <div style="display:flex; justify-content:space-width; width:100%;">
+            <div style="display:flex; justify-content:space-between; width:100%;">
               <span class="u-name">${s.userName}</span>
               <span style="color:#64748b; font-size:12px;">${timeAgo < 1 ? 'Just now' : timeAgo + 'm ago'}</span>
             </div>
@@ -293,4 +363,4 @@
   }
 </script>
 </body>
-</html>
+  </html>

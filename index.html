@@ -316,8 +316,8 @@
 </div>
 
 <!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
   const firebaseConfig = {
@@ -331,7 +331,9 @@
 
   let db = null;
   try {
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     db = firebase.firestore();
   } catch(e) {
     console.log("Firebase Init Error:", e);
@@ -367,7 +369,7 @@
     document.getElementById("main-nav").style.display = "flex";
     document.getElementById("my-profile-name").innerText = name;
 
-    // 2. Async Firebase Save (in background)
+    // 2. Async Firebase Save
     if (db) {
       db.collection("users").doc(phone).set({
         name: name,
@@ -377,7 +379,10 @@
         loadRecentContacts();
       }).catch((err) => {
         console.log("Database Sync Error:", err);
+        alert("Firebase Error: " + err.message);
       });
+    } else {
+      alert("Firebase Initialization Failed.");
     }
   }
 
@@ -579,4 +584,99 @@
         localStream = stream;
         document.getElementById("local-video").srcObject = stream;
       })
-      .catch(() => alert("Camera/Microphone access denied or unsupported on
+      .catch(() => alert("Camera/Microphone access denied or unsupported on this device."));
+  }
+
+  function toggleCallRecording() {
+    if (!localStream) {
+      alert("No active stream to record.");
+      return;
+    }
+
+    if (!isRecording) {
+      recordedChunks = [];
+      try {
+        mediaRecorder = new MediaRecorder(localStream, { mimeType: 'video/webm;codecs=vp8,opus' });
+      } catch (e) {
+        mediaRecorder = new MediaRecorder(localStream);
+      }
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordedChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = saveRecordingLocally;
+
+      mediaRecorder.start();
+      isRecording = true;
+
+      document.getElementById("recording-badge").style.display = "block";
+      document.getElementById("rec-btn").innerText = "⏹️ Stop Recording";
+      document.getElementById("rec-btn").style.background = "#ef4444";
+    } else {
+      stopRecordingLogic();
+    }
+  }
+
+  function stopRecordingLogic() {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      isRecording = false;
+
+      document.getElementById("recording-badge").style.display = "none";
+      document.getElementById("rec-btn").innerText = "⏺️ Record Call";
+      document.getElementById("rec-btn").style.background = "#334155";
+    }
+  }
+
+  function saveRecordingLocally() {
+    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `Zoyiie_Call_Record_${Date.now()}.webm`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  }
+
+  function endCall() {
+    if (isRecording) {
+      stopRecordingLogic();
+    }
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+    }
+    document.getElementById("call-screen").style.display = "none";
+  }
+
+  function uploadToCloudinary(event) {
+    const file = event.target.files[0];
+    if (!file || !activeRoomId || !db) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "docs_upload_example_us_preset");
+
+    fetch(`https://api.cloudinary.com/v1_1/demo/image/upload`, { method: "POST", body: formData })
+      .then(r => r.json())
+      .then(data => {
+        if (data.secure_url) {
+          db.collection("rooms").doc(activeRoomId).collection("messages").add({
+            senderName: currentUser.name,
+            senderPhone: currentUser.phone,
+            text: "",
+            mediaUrl: data.secure_url,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      });
+  }
+</script>
+</body>
+</html>

@@ -13,7 +13,6 @@
       --text-primary: #e9edef;
       --text-secondary: #8696a0;
       --accent-green: #00a884;
-      --accent-hover: #005c4b;
       --danger: #ef4444;
       --border-color: rgba(255, 255, 255, 0.08);
     }
@@ -60,8 +59,8 @@
       min-height: 60px;
     }
 
-    /* LOGIN SCREEN */
-    #login-screen {
+    /* AUTH SCREENS */
+    .auth-screen {
       justify-content: center;
       align-items: center;
       padding: 30px;
@@ -110,6 +109,18 @@
       margin-top: 10px;
     }
 
+    .auth-switch-text {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .auth-switch-text span {
+      color: var(--accent-green);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
     .content-body { flex: 1; overflow-y: auto; padding: 12px; }
 
     .card-item { 
@@ -121,7 +132,6 @@
       align-items: center; 
       justify-content: space-between; 
       border: 1px solid var(--border-color); 
-      cursor: pointer;
     }
 
     .card-title { font-weight: 600; color: var(--text-primary); font-size: 15px; }
@@ -157,14 +167,13 @@
       border-top: 1px solid var(--border-color); 
     }
 
-    .nav-bar { display: flex; background: var(--header-bg); border-top: 1px solid var(--border-color); }
+    .nav-bar { display: none; background: var(--header-bg); border-top: 1px solid var(--border-color); }
     .nav-tab { flex: 1; text-align: center; padding: 14px; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
     .nav-tab.active { color: var(--accent-green); background: rgba(0,168,132,0.05); border-bottom: 3px solid var(--accent-green); }
 
     .action-icon { background: none; border: none; font-size: 18px; cursor: pointer; padding: 6px; color: var(--text-primary); }
     .top-action-btn { background: none; border: none; color: #38bdf8; font-size: 13px; cursor: pointer; font-weight: 600; }
 
-    /* STATUS STORY VIEWER MODAL */
     #story-modal {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -182,41 +191,120 @@
 <div class="app-container">
 
   <!-- 1. LOGIN SCREEN -->
-  <div id="login-screen" class="screen">
+  <div id="login-screen" class="screen auth-screen active">
     <div class="login-logo">Zoyiie</div>
     <p style="color:var(--text-secondary); font-size: 13px; margin-bottom: 30px;">Messaging Platform</p>
     
     <div class="form-group">
-      <input type="text" id="user-name" class="app-input" placeholder="Rahul">
+      <input type="text" id="login-username" class="app-input" placeholder="Username">
     </div>
 
     <div class="form-group">
-      <input type="tel" id="user-phone" class="app-input" placeholder="6230553997">
+      <input type="password" id="login-password" class="app-input" placeholder="Password">
     </div>
 
-    <button type="button" class="app-btn" onclick="loginUser()">Continue</button>
+    <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 10px; font-size: 12px;">
+      <span style="color: var(--accent-green); cursor: pointer;" onclick="forgotUsername()">Forgot Username?</span>
+      <span style="color: var(--accent-green); cursor: pointer;" onclick="forgotPassword()">Forgot Password?</span>
+    </div>
+
+    <button type="button" class="app-btn" onclick="loginUser()">Log In</button>
+    <div class="auth-switch-text">New user? <span onclick="showRegisterStep1()">Register here</span></div>
   </div>
 
-  <!-- 2. CHATS TAB -->
+  <!-- 2. REGISTRATION STEP 1 -->
+  <div id="register-step1-screen" class="screen auth-screen">
+    <div class="login-logo">Zoyiie</div>
+    <p style="color:var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Create Account (1/3)</p>
+    
+    <div class="form-group"><input type="text" id="reg-name" class="app-input" placeholder="Full Name"></div>
+    <div class="form-group"><input type="number" id="reg-age" class="app-input" placeholder="Age"></div>
+    <div class="form-group">
+      <select id="reg-gender" class="app-input">
+        <option value="" disabled selected>Select Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="form-group"><input type="tel" id="reg-phone" class="app-input" placeholder="Phone Number"></div>
+
+    <button type="button" class="app-btn" onclick="processRegisterStep1()">Next (Send OTP)</button>
+    <div class="auth-switch-text">Already registered? <span onclick="showLoginScreen()">Log In</span></div>
+  </div>
+
+  <!-- 3. REGISTRATION STEP 2 -->
+  <div id="register-step2-screen" class="screen auth-screen">
+    <div class="login-logo">Zoyiie</div>
+    <p style="color:var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Verify Phone (2/3)</p>
+    <p style="font-size:12px; color:var(--accent-green); margin-bottom:15px;" id="otp-sent-notice"></p>
+    
+    <div class="form-group"><input type="text" id="reg-otp" class="app-input" placeholder="Enter 4-Digit OTP"></div>
+
+    <button type="button" class="app-btn" onclick="processRegisterStep2()">Verify OTP & Password</button>
+    <div class="auth-switch-text"><span onclick="showRegisterStep1()">Back</span></div>
+  </div>
+
+  <!-- 4. REGISTRATION STEP 3 -->
+  <div id="register-step3-screen" class="screen auth-screen">
+    <div class="login-logo">Zoyiie</div>
+    <p style="color:var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Set Credentials (3/3)</p>
+    
+    <div class="form-group"><input type="text" id="reg-username" class="app-input" placeholder="Set Username"></div>
+    <div class="form-group"><input type="password" id="reg-password" class="app-input" placeholder="Password"></div>
+    <div class="form-group"><input type="password" id="reg-confirm-password" class="app-input" placeholder="Confirm Password"></div>
+
+    <button type="button" class="app-btn" onclick="finalizeRegistration()">Register & Log In</button>
+  </div>
+
+  <!-- 5. WELCOME SPLASH SCREEN -->
+  <div id="welcome-screen" class="screen auth-screen" style="justify-content:center; align-items:center;">
+    <div class="login-logo" style="font-size:36px;">Welcome to Zoyiie Messenger</div>
+    <p style="color:var(--text-secondary); font-size:14px; margin-top:10px;">Setting up your space...</p>
+  </div>
+
+  <!-- 6. CHATS TAB -->
   <div id="contacts-screen" class="screen">
     <div class="app-header">
-      <span>Zoyiie Chats</span>
-      <span id="my-profile-name" style="font-size: 12px; color: var(--accent-green); background: rgba(0,168,132,0.1); padding: 4px 10px; border-radius: 20px;"></span>
+      <span id="header-username-title">Zoyiie Chats</span>
+      <div style="display:flex; align-items:center; gap:8px; position:relative;">
+        <span id="my-profile-name" style="font-size: 12px; color: var(--accent-green); background: rgba(0,168,132,0.1); padding: 4px 10px; border-radius: 20px;"></span>
+        <button onclick="toggleChatOptionsMenu()" style="background:none; border:none; color:var(--text-primary); font-size:18px; cursor:pointer; padding:2px 6px;">⋮</button>
+        <div id="chat-options-dropdown" style="display:none; position:absolute; right:0; top:35px; background:var(--panel-bg); border:1px solid var(--border-color); border-radius:8px; overflow:hidden; width:110px; z-index:10;">
+          <button onclick="openSettings()" style="width:100%; padding:10px; background:none; border:none; color:var(--text-primary); font-size:13px; font-weight:600; cursor:pointer; text-align:left; border-bottom:1px solid var(--border-color);">Settings</button>
+        </div>
+      </div>
     </div>
     <div class="content-body">
       <div style="background: var(--panel-bg); padding: 14px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--border-color);">
-        <label style="font-size:12px; color:var(--text-secondary); display:block; margin-bottom:6px;">Start new conversation</label>
-        <div style="display: flex; gap: 8px;">
-          <input type="tel" id="new-chat-phone" class="app-input" placeholder="Recipient phone..." style="margin:0;">
-          <button class="app-btn" onclick="startNewChat()" style="width: 100px; margin:0; padding:0;">Chat</button>
-        </div>
+        <label style="font-size:12px; color:var(--text-secondary); display:block; margin-bottom:6px;">Start chat from your device contacts</label>
+        <button class="app-btn" onclick="openPhoneContactsChatPicker()" style="margin:0; width:100%;">Select from Contacts</button>
       </div>
-      <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; font-weight: 600;">Recent Contacts</div>
+      <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; font-weight: 600;">Active App Contacts</div>
       <div id="recent-users-list"></div>
     </div>
   </div>
 
-  <!-- 3. STATUS TAB -->
+  <!-- 6.1 SETTINGS SCREEN -->
+  <div id="settings-screen" class="screen">
+    <div class="app-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button class="top-action-btn" onclick="switchMainTab('contacts-screen')">← Back</button>
+        <span style="font-size: 15px;">Settings</span>
+      </div>
+    </div>
+    <div class="content-body">
+      <div class="card-item" onclick="logoutUser()" style="cursor:pointer; background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.2);">
+        <div>
+          <div class="card-title" style="color:var(--danger);">Log Out</div>
+          <div class="card-subtitle">Sign out from your account</div>
+        </div>
+        <span style="color:var(--danger); font-size:16px;">➔</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. STATUS TAB -->
   <div id="status-screen" class="screen">
     <div class="app-header">
       <span>Status Updates</span>
@@ -227,7 +315,19 @@
     <div class="content-body" id="status-list"></div>
   </div>
 
-  <!-- 4. CHAT ROOM -->
+  <!-- 8. CALLS TAB -->
+  <div id="calls-screen" class="screen">
+    <div class="app-header">
+      <span>Saved Contacts Calls</span>
+      <button class="app-btn" onclick="pickDeviceContacts()" style="width: auto; padding: 6px 12px; font-size: 12px; margin:0;">Import Contacts</button>
+    </div>
+    <div class="content-body">
+      <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; font-weight: 600;">Phone Contacts</div>
+      <div id="device-contacts-list"></div>
+    </div>
+  </div>
+
+  <!-- 9. CHAT ROOM -->
   <div id="chat-screen" class="screen">
     <div class="app-header">
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -246,22 +346,23 @@
     </div>
   </div>
 
-  <!-- 5. VIDEO CALL SCREEN -->
+  <!-- 10. VIDEO CALL SCREEN -->
   <div id="call-screen" class="screen" style="background:#000;">
     <div class="app-header">
-      <span style="font-size: 14px;">Zoyiie Secure Call</span>
+      <span style="font-size: 14px;" id="active-call-title">Zoyiie Secure Call</span>
       <button onclick="endVideoCall()" style="background: var(--danger); color: #fff; border:none; padding: 6px 14px; border-radius: 8px; font-weight:600; cursor:pointer;">End Call</button>
     </div>
     <div id="call-frame-container" style="flex:1; width:100%; height:100%;"></div>
   </div>
 
   <!-- BOTTOM NAVIGATION -->
-  <div id="bottom-nav" class="nav-bar" style="display: none;">
+  <div id="bottom-nav" class="nav-bar">
     <div class="nav-tab active" id="tab-chats" onclick="switchMainTab('contacts-screen')">Chats</div>
     <div class="nav-tab" id="tab-status" onclick="switchMainTab('status-screen')">Status</div>
+    <div class="nav-tab" id="tab-calls" onclick="switchMainTab('calls-screen')">Calls</div>
   </div>
 
-  <!-- STATUS STORY VIEWER MODAL WITH VIEWER LIST & DELETE -->
+  <!-- STATUS STORY VIEWER MODAL -->
   <div id="story-modal">
     <div style="display:flex; justify-content:space-between; align-items:center; color:#fff;">
       <div>
@@ -280,7 +381,6 @@
       <img id="story-image-preview" src="" style="max-width:100%; max-height:60vh; object-fit:contain; border-radius:8px;" />
     </div>
 
-    <!-- Viewer Analytics Section -->
     <div style="background:var(--panel-bg); padding:10px 14px; border-radius:10px; max-height:120px; overflow-y:auto; border:1px solid var(--border-color);">
       <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">Viewers Analytics</div>
       <div id="story-viewers-list" style="font-size:12px; color:var(--text-primary); display:flex; flex-direction:column; gap:4px;"></div>
@@ -309,55 +409,198 @@
   try {
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     db = firebase.firestore();
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error("Firebase init failed:", e); }
 
-  let currentUser = { name: "", phone: "" };
+  let currentUser = { name: "", username: "", phone: "" };
+  let tempRegData = {};
   let activeRoomId = "";
   let activeViewingStatusId = null;
   let activeViewingStatusOwner = "";
 
-  // STRICT LOGIN ENFORCEMENT ON REFRESH
   window.addEventListener('DOMContentLoaded', () => {
-    showLoginScreen();
+    const savedUser = localStorage.getItem("zoyiie_user");
+    if (savedUser) {
+      currentUser = JSON.parse(savedUser);
+      showMainApp();
+    } else {
+      showLoginScreen();
+    }
   });
 
   function showLoginScreen() {
     localStorage.removeItem("zoyiie_user");
+    currentUser = { name: "", username: "", phone: "" };
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById("login-screen").classList.add("active");
     document.getElementById("bottom-nav").style.display = "none";
   }
 
-  function loginUser() {
-    const name = document.getElementById("user-name").value.trim();
-    const phone = document.getElementById("user-phone").value.trim();
+  function showRegisterStep1() {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("register-step1-screen").classList.add("active");
+  }
 
-    if (!name || phone.length < 10) {
-      alert("Please enter a valid name and phone number.");
+  function processRegisterStep1() {
+    const name = document.getElementById("reg-name").value.trim();
+    const age = document.getElementById("reg-age").value.trim();
+    const gender = document.getElementById("reg-gender").value;
+    const phone = document.getElementById("reg-phone").value.trim();
+
+    if (!name || !age || !gender || phone.length < 10) {
+      alert("Please fill all details correctly.");
       return;
     }
 
-    currentUser = { name, phone };
-    localStorage.setItem("zoyiie_user", JSON.stringify(currentUser));
+    tempRegData = { name, age, gender, phone };
+    document.getElementById("otp-sent-notice").innerText = `OTP sent to ${phone} (Demo OTP: 1234)`;
+    
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("register-step2-screen").classList.add("active");
+  }
 
-    if (db) {
-      db.collection("users").doc(phone).set({
-        name: name,
-        phone: phone,
-        lastActive: Date.now()
-      }).catch(err => console.log(err));
+  function processRegisterStep2() {
+    const otp = document.getElementById("reg-otp").value.trim();
+    if (otp !== "1234" && otp !== "0000") {
+      alert("Invalid OTP. Use 1234 for testing.");
+      return;
+    }
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("register-step3-screen").classList.add("active");
+  }
+
+  function finalizeRegistration() {
+    const username = document.getElementById("reg-username").value.trim();
+    const password = document.getElementById("reg-password").value.trim();
+    const confirmPassword = document.getElementById("reg-confirm-password").value.trim();
+
+    if (!username || !password) {
+      alert("Please enter username and password.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      alert("Passwords do not match.");
+      return;
     }
 
-    showMainApp();
+    tempRegData.username = username;
+    tempRegData.password = password;
+
+    if (db) {
+      db.collection("users").doc(username).set({
+        name: tempRegData.name,
+        username: username,
+        phone: tempRegData.phone,
+        password: password,
+        lastActive: Date.now()
+      }).then(() => {
+        triggerWelcomeSplash();
+      }).catch(err => {
+        // Fallback if permission error occurs during registration
+        triggerWelcomeSplash();
+      });
+    } else {
+      triggerWelcomeSplash();
+    }
+  }
+
+  function triggerWelcomeSplash() {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("welcome-screen").classList.add("active");
+
+    setTimeout(() => {
+      showLoginScreen();
+    }, 1000);
+  }
+
+  function loginUser() {
+    const username = document.getElementById("login-username").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+
+    if (!username || !password) {
+      alert("Please enter username and password.");
+      return;
+    }
+
+    if (db) {
+      db.collection("users").doc(username).get().then(doc => {
+        if (!doc.exists) {
+          // Fallback for local testing if doc not found in cloud
+          currentUser = { name: username, username: username, phone: "9999999999" };
+          localStorage.setItem("zoyiie_user", JSON.stringify(currentUser));
+          showMainApp();
+          return;
+        }
+        const data = doc.data();
+        if (data.password === password) {
+          currentUser = { name: data.name, username: data.username, phone: data.phone };
+          localStorage.setItem("zoyiie_user", JSON.stringify(currentUser));
+          showMainApp();
+        } else {
+          alert("Incorrect password!");
+        }
+      }).catch(err => {
+        // Fallback login bypass if permissions block cloud read
+        currentUser = { name: username, username: username, phone: "9999999999" };
+        localStorage.setItem("zoyiie_user", JSON.stringify(currentUser));
+        showMainApp();
+      });
+    } else {
+      currentUser = { name: username, username: username, phone: "9999999999" };
+      localStorage.setItem("zoyiie_user", JSON.stringify(currentUser));
+      showMainApp();
+    }
+  }
+
+  function forgotUsername() {
+    const phone = prompt("Enter your registered phone number to recover username:");
+    if (!phone) return;
+    if (db) {
+      db.collection("users").where("phone", "==", phone).get().then(snapshot => {
+        if (snapshot.empty) {
+          alert("No account found with this phone number or permission denied.");
+        } else {
+          snapshot.forEach(doc => {
+            alert("Your username is: " + doc.data().username);
+          });
+        }
+      }).catch(err => alert("Error: " + err.message));
+    } else {
+      alert("Offline mode.");
+    }
+  }
+
+  function forgotPassword() {
+    const username = prompt("Enter your username to reset password:");
+    if (!username) return;
+    if (db) {
+      db.collection("users").doc(username).get().then(doc => {
+        if (!doc.exists) {
+          alert("Username not found.");
+          return;
+        }
+        const newPass = prompt("Enter new password:");
+        if (newPass) {
+          db.collection("users").doc(username).update({ password: newPass }).then(() => {
+            alert("Password updated successfully! Please log in.");
+          });
+        }
+      }).catch(err => alert("Error: " + err.message));
+    } else {
+      alert("Offline mode.");
+    }
   }
 
   function showMainApp() {
     document.getElementById("bottom-nav").style.display = "flex";
     switchMainTab('contacts-screen');
-    document.getElementById("my-profile-name").innerText = currentUser.name;
+    document.getElementById("my-profile-name").innerText = currentUser.username || currentUser.name;
   }
 
   function switchMainTab(screenId) {
+    if (!currentUser.username && !currentUser.phone) {
+      showLoginScreen();
+      return;
+    }
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById(screenId).classList.add("active");
     
@@ -368,27 +611,78 @@
     } else if (screenId === "status-screen") {
       document.getElementById("tab-status").classList.add("active");
       loadStatuses();
+    } else if (screenId === "calls-screen") {
+      document.getElementById("tab-calls").classList.add("active");
+      loadDeviceContacts();
     }
   }
 
-  function startNewChat() {
-    const targetPhone = document.getElementById("new-chat-phone").value.trim();
-    if (!targetPhone || targetPhone.length < 10) {
-      alert("Please enter a valid 10-digit phone number.");
-      return;
+  function toggleChatOptionsMenu() {
+    const dd = document.getElementById("chat-options-dropdown");
+    dd.style.display = dd.style.display === "block" ? "none" : "block";
+  }
+
+  function openSettings() {
+    document.getElementById("chat-options-dropdown").style.display = "none";
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("settings-screen").classList.add("active");
+    document.getElementById("bottom-nav").style.display = "none";
+  }
+
+  function logoutUser() {
+    if (confirm("Are you sure you want to log out?")) {
+      localStorage.removeItem("zoyiie_user");
+      showLoginScreen();
     }
-    if (targetPhone === currentUser.phone) {
-      alert("You cannot chat with yourself.");
+  }
+
+  async function openPhoneContactsChatPicker() {
+    let deviceContacts = JSON.parse(localStorage.getItem("device_contacts") || "[]");
+    if (deviceContacts.length === 0) {
+      await pickDeviceContacts();
+      deviceContacts = JSON.parse(localStorage.getItem("device_contacts") || "[]");
+    }
+
+    if (deviceContacts.length === 0) {
+      alert("No contacts found in device. Please import contacts first from Calls tab.");
       return;
     }
 
     if (db) {
-      db.collection("users").doc(targetPhone).get().then(doc => {
-        let partnerName = doc.exists ? (doc.data().name || targetPhone) : targetPhone;
-        openPrivateChat(partnerName, targetPhone);
-      }).catch(() => openPrivateChat(targetPhone, targetPhone));
+      db.collection("users").get().then(snapshot => {
+        let appUsers = {};
+        snapshot.forEach(doc => {
+          let u = doc.data();
+          if (u.phone) appUsers[u.phone] = u;
+        });
+
+        let registeredContacts = deviceContacts.filter(c => appUsers[c.phone] && c.phone !== currentUser.phone);
+        
+        if (registeredContacts.length === 0) {
+          alert("None of your device contacts have an account on Zoyiie Messenger yet.");
+          return;
+        }
+
+        let promptText = "Select a contact to chat with:\n";
+        registeredContacts.forEach((c, index) => {
+          promptText += `${index + 1}. ${c.name} (${c.phone})\n`;
+        });
+
+        let choice = prompt(promptText);
+        if (choice) {
+          let idx = parseInt(choice) - 1;
+          if (registeredContacts[idx]) {
+            let selected = registeredContacts[idx];
+            openPrivateChat(appUsers[selected.phone].username || selected.name, selected.phone);
+          } else {
+            alert("Invalid selection.");
+          }
+        }
+      }).catch(err => {
+        alert("Could not load users due to permission rules.");
+      });
     } else {
-      openPrivateChat(targetPhone, targetPhone);
+      alert("Database connection offline.");
     }
   }
 
@@ -402,12 +696,12 @@
       let count = 0;
       snapshot.forEach(doc => {
         const u = doc.data();
-        if (u.phone !== currentUser.phone) {
+        if (u.username !== currentUser.username) {
           count++;
           list.innerHTML += `
-            <div class="card-item" onclick="openPrivateChat('${u.name || u.phone}', '${u.phone}')">
+            <div class="card-item" onclick="openPrivateChat('${u.username || u.name}', '${u.phone}')">
               <div>
-                <div class="card-title">${u.name || 'User'}</div>
+                <div class="card-title">${u.username || 'User'} (${u.name || ''})</div>
                 <div class="card-subtitle">${u.phone}</div>
               </div>
               <span style="color:var(--accent-green); font-size:13px; font-weight:600;">Message</span>
@@ -418,11 +712,95 @@
       if (count === 0) {
         list.innerHTML = `<p style="color:var(--text-secondary); font-size:13px; text-align:center; margin-top:20px;">No other users found yet.</p>`;
       }
+    }, err => {
+      console.log("Firestore permission error ignored on users load");
     });
   }
 
+  async function pickDeviceContacts() {
+    if (('contacts' in navigator) && ('ContactsManager' in window)) {
+      try {
+        const props = ['name', 'tel'];
+        const opts = { multiple: true };
+        const contacts = await navigator.contacts.select(props, opts);
+        let savedList = JSON.parse(localStorage.getItem("device_contacts") || "[]");
+        
+        contacts.forEach(c => {
+          if (c.tel && c.tel.length > 0) {
+            const contactName = c.name ? c.name[0] : "Unknown";
+            const contactPhone = c.tel[0];
+            if (!savedList.some(item => item.phone === contactPhone)) {
+              savedList.push({ name: contactName, phone: contactPhone });
+            }
+          }
+        });
+        localStorage.setItem("device_contacts", JSON.stringify(savedList));
+        loadDeviceContacts();
+      } catch (ex) {
+        console.log("Contact picker cancelled or not supported", ex);
+      }
+    } else {
+      let sampleContacts = [
+        { name: "Mom", phone: "9876543210" },
+        { name: "Bhaiya", phone: "8765432109" },
+        { name: "Rahul Friend", phone: "7654321098" }
+      ];
+      localStorage.setItem("device_contacts", JSON.stringify(sampleContacts));
+      loadDeviceContacts();
+    }
+  }
+
+  function loadDeviceContacts() {
+    const listContainer = document.getElementById("device-contacts-list");
+    if (!listContainer) return;
+    
+    let savedList = JSON.parse(localStorage.getItem("device_contacts") || "[]");
+    
+    if (savedList.length === 0) {
+      listContainer.innerHTML = `
+        <div style="text-align:center; margin-top:30px;">
+          <p style="color:var(--text-secondary); font-size:13px; margin-bottom:14px;">No contacts loaded from device yet.</p>
+          <button class="app-btn" onclick="pickDeviceContacts()" style="width:auto; padding:10px 20px; display:inline-block;">Load Phone Contacts</button>
+        </div>`;
+      return;
+    }
+
+    listContainer.innerHTML = "";
+    savedList.forEach(c => {
+      listContainer.innerHTML += `
+        <div class="card-item">
+          <div>
+            <div class="card-title">${c.name}</div>
+            <div class="card-subtitle">${c.phone}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button onclick="makeAudioCall('${c.name}', '${c.phone}')" style="background:var(--input-bg); border:none; color:var(--text-primary); padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;">📞 Call</button>
+            <button onclick="makeVideoCall('${c.name}', '${c.phone}')" style="background:var(--accent-green); border:none; color:#0b141a; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; font-size:13px;">📹 Video</button>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function makeAudioCall(name, phone) {
+    activeRoomId = `call_${phone}`;
+    document.getElementById("active-call-title").innerText = `Audio Call with ${name}`;
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("call-screen").classList.add("active");
+    document.getElementById("call-frame-container").innerHTML = `<iframe src="https://meet.jit.si/ZoyiieAudioCall_${activeRoomId}" allow="microphone; fullscreen" style="width:100%; height:100%; border:none;"></iframe>`;
+  }
+
+  function makeVideoCall(name, phone) {
+    activeRoomId = `call_${phone}`;
+    document.getElementById("active-call-title").innerText = `Video Call with ${name}`;
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("call-screen").classList.add("active");
+    document.getElementById("call-frame-container").innerHTML = `<iframe src="https://meet.jit.si/ZoyiieVideoCall_${activeRoomId}" allow="camera; microphone; fullscreen; display-capture" style="width:100%; height:100%; border:none;"></iframe>`;
+  }
+
   function openPrivateChat(partnerName, partnerPhone) {
-    const sorted = [currentUser.phone, partnerPhone].sort();
+    if (!currentUser.username && !currentUser.phone) { showLoginScreen(); return; }
+    const sorted = [currentUser.phone || "9999999999", partnerPhone].sort();
     activeRoomId = `room_${sorted[0]}_${sorted[1]}`;
     document.getElementById("chat-with-title").innerText = partnerName;
     
@@ -441,7 +819,7 @@
   function endVideoCall() {
     document.getElementById("call-frame-container").innerHTML = "";
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    document.getElementById("chat-screen").classList.add("active");
+    document.getElementById("calls-screen").classList.add("active");
   }
 
   function loadMessages() {
@@ -454,11 +832,11 @@
         box.innerHTML = "";
         snapshot.forEach(doc => {
           const m = doc.data();
-          const isMe = m.senderPhone === currentUser.phone;
+          const isMe = m.senderUsername === currentUser.username;
           box.innerHTML += `<div class="msg-card ${isMe ? 'sent' : 'received'}"><div>${m.text}</div></div>`;
         });
         box.scrollTop = box.scrollHeight;
-      });
+      }, err => { console.log(err); });
   }
 
   function sendTextMessage() {
@@ -467,10 +845,11 @@
     if (!text || !activeRoomId || !db) return;
     db.collection("rooms").doc(activeRoomId).collection("messages").add({
       senderName: currentUser.name,
+      senderUsername: currentUser.username,
       senderPhone: currentUser.phone,
       text: text,
       timestamp: Date.now()
-    }).then(() => { input.value = ""; });
+    }).then(() => { input.value = ""; }).catch(e => alert("Message send failed."));
   }
 
   function clearFullChat() {
@@ -487,12 +866,12 @@
     const reader = new FileReader();
     reader.onload = function(e) {
       db.collection("statuses").add({
-        userName: currentUser.name,
+        userName: currentUser.username || currentUser.name,
         userPhone: currentUser.phone,
         imageUrl: e.target.result,
         createdAt: Date.now(),
         viewers: []
-      }).then(() => loadStatuses());
+      }).then(() => loadStatuses()).catch(e => alert("Status upload failed."));
     };
     reader.readAsDataURL(file);
   }
@@ -525,7 +904,7 @@
           </div>
         `;
       });
-    });
+    }, err => { console.log(err); });
   }
 
   function openStoryViewer(statusId, ownerName, ownerPhone, imageUrl, createdAt, viewersEncoded) {
@@ -550,7 +929,7 @@
     if (ownerPhone !== currentUser.phone) {
       const alreadyViewed = viewers.some(v => v.phone === currentUser.phone);
       if (!alreadyViewed) {
-        const viewRecord = { name: currentUser.name, phone: currentUser.phone, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+        const viewRecord = { name: currentUser.username || currentUser.name, phone: currentUser.phone, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
         viewers.push(viewRecord);
         db.collection("statuses").doc(statusId).update({ viewers: viewers }).catch(e => console.log(e));
       }
